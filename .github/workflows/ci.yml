@@ -11,11 +11,15 @@ jobs:
     strategy:
       matrix:
         python: ["3.11", "3.12", "3.13"]
+    env:
+      UV_PYTHON: ${{ matrix.python }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       # No model backend is installed: the unit tests run on the deterministic mock backend.
-      - run: uv sync --extra dev --extra server --python ${{ matrix.python }}
-      - run: uv run ruff check src tests
-      - run: uv run ruff format --check src tests
-      - run: uv run pytest -q
+      - run: uv sync --extra dev --extra server
+      # --no-sync: a plain `uv run` would re-sync the environment and drop the extras.
+      - run: uv run --no-sync python --version
+      - run: uv run --no-sync ruff check src tests
+      - run: uv run --no-sync ruff format --check src tests
+      - run: uv run --no-sync pytest -q
