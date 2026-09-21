@@ -26,7 +26,7 @@ malformed, and every answer comes with the numbers your code needs to decide whe
 ```python
 import localdecision as ld
 
-engine = ld.load()  # Qwen3-4B-Instruct on MLX (Apple Silicon) or PyTorch (CUDA / MPS / CPU)
+engine = ld.load()  # Qwen3-1.7B on MLX (Apple Silicon) or PyTorch (CUDA / MPS / CPU)
 
 result = engine.system_one(
     "Help! My payouts have been failing for 3 days and our suppliers are waiting.",
@@ -116,10 +116,11 @@ uv sync --extra mlx --extra server
 uv sync --extra torch --extra server
 ```
 
-The first run downloads the default model from Hugging Face:
-`mlx-community/Qwen3-4B-Instruct-2507-8bit` (~4.3 GB) on MLX, `Qwen/Qwen3-4B-Instruct-2507`
-(~8 GB) on PyTorch. Any instruction-tuned causal LM with a chat template works: pass
-`--model <repo or path>`. `mlx-community/Qwen3-0.6B-8bit` (~0.6 GB) is a quick way to try things.
+The first run downloads the default model from Hugging Face: `mlx-community/Qwen3-1.7B-8bit`
+(~1.8 GB) on MLX, `Qwen/Qwen3-1.7B` (~4 GB) on PyTorch. It fits an ordinary laptop with 8 GB of
+RAM. Any instruction-tuned causal LM with a chat template works: pass `--model <repo or path>`;
+`mlx-community/Qwen3-0.6B-8bit` (~0.6 GB) is even lighter. A decision-tuned 1.7B model is the
+next step on the [roadmap](#roadmap); its training set builder is ready in [training/](training/README.md).
 
 ```bash
 uv run localdecision selftest          # loads the model and prints the self-test result
@@ -132,7 +133,7 @@ uv run localdecision selftest          # loads the model and prints the self-tes
 ```python
 import localdecision as ld
 
-engine = ld.load("mlx-community/Qwen3-4B-Instruct-2507-8bit", calibration="calibration.json")
+engine = ld.load("mlx-community/Qwen3-1.7B-8bit", calibration="calibration.json")
 r = engine.system_one(state, questions, debias="auto")   # settings are optional
 ```
 
@@ -172,25 +173,25 @@ Request and answer shapes:
   "settings": {"debias": "auto", "calibrated": true, "diagnostics": true}        // optional extension
 }
 
-// response for examples/ticket.json (Qwen3-4B 8-bit, calibration profile from results/, M3 Pro)
+// response for examples/ticket.json (Qwen3-1.7B 8-bit, raw probabilities, MacBook Pro M3 Pro)
 {
-  "model": "Qwen3-4B-Instruct-2507-8bit",
+  "model": "Qwen3-1.7B-8bit",
   "answers": {
-    "is_urgent":   {"type": "noul", "noul": 0.917187},
+    "is_urgent":   {"type": "noul", "noul": 1.0},
     "department":  {"type": "choice", "choice": "billing",
-                    "probabilities": {"billing": 0.914976, "technical": 0.045383, "account": 0.020248, "sales": 0.019393},
-                    "confidence": 0.886634},
-    "frustration": {"type": "score", "score": 1.309239,
+                    "probabilities": {"billing": 0.999952, "technical": 4.8e-05, "account": 0.0, "sales": 0.0},
+                    "confidence": 0.999936},
+    "frustration": {"type": "score", "score": 1.0,
                     "legend": {"0": "Calm, just stating facts", "1": "Frustrated but civil", "2": "Very angry, threatening to leave"},
-                    "probabilities": {"0": 0.127174, "1": 0.436413, "2": 0.436413}, "confidence": 0.15462}
+                    "probabilities": {"0": 0.0, "1": 0.999999, "2": 1e-06}, "confidence": 0.999998}
   },
-  "usage": {"input_tokens": 563, "output_tokens": 0},
+  "usage": {"input_tokens": 595, "output_tokens": 0},
   "diagnostics": {                                  // one entry per question; one shown
-    "department": {"views": 4, "agreement": 1.0, "margin": 0.869593, "entropy_confidence": 0.727994,
-                   "format_mass": 1.0, "temperature": 7.2409, "stages": 1, "prediction_set": ["billing"]}
+    "department": {"views": 4, "agreement": 0.75, "margin": 0.999903, "entropy_confidence": 0.999619,
+                   "format_mass": 0.980255, "temperature": 1.0, "stages": 1}
   },
-  "timing": {"total_ms": 1395.61, "prefill_ms": 353.04, "readout_ms": 909.93, "cached_tokens": 48,
-             "prefix_tokens": 101, "suffix_tokens": 414, "probes": 8, "batches": 3}
+  "timing": {"total_ms": 580.67, "prefill_ms": 134.86, "readout_ms": 394.37, "cached_tokens": 48,
+             "prefix_tokens": 101, "suffix_tokens": 446, "probes": 8, "batches": 3}
 }
 ```
 
@@ -222,66 +223,29 @@ Common flags: `--backend auto|mlx|torch`, `--model`, `--batch-size`, `--max-cont
 
 ## Results
 
-All numbers below were measured on a **MacBook Pro M3 Pro (18 GB)** with the default model
-`mlx-community/Qwen3-4B-Instruct-2507-8bit` on MLX 0.32, prompt `ld-prompt-v1`. Every run writes
-per-decision records (with raw pooled log-probabilities) to [`results/`](results), so any number
-can be recomputed with `localdecision report`. Latency is wall-clock per decision, warm model,
-one request at a time.
+Measured on a **MacBook Pro M3 Pro (18 GB)** with `mlx-community/Qwen3-1.7B-8bit` on MLX 0.32,
+prompt `ld-prompt-v1`, **zero-shot**: this is the starting point that the decision-tuned model
+([training/](training/README.md)) has to beat. Per-decision records are in [`results/`](results)
+and can be re-scored with `localdecision report`. Latency is wall-clock per decision, warm model.
 
-### Hand-written smoke set
-
-83 decisions over 44 states ([benchmarks/README.md](benchmarks/README.md)); small and labelled
-by the author, so read it as a sanity check, not a benchmark.
-
-| Views | All | Choice (35) | Noul (33) | Score (15) | ms / decision |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 1 view | 0.940 | 1.000 | 0.939 | 0.800 | 215 |
-| debiased (`auto`) | 0.940 | 1.000 | 0.939 | 0.800 | 443 |
-
-The 5 errors: three borderline labels (is a polite message about a double charge "calm" or
-"frustrated"? is "fix it before we pay at the end of the month" urgent?), one numeric comparison
-(`disk_percent: 88` judged "above 90") and one ordinal CV fit. All five were made with a raw
-probability of ~1.0, which is what calibration is for.
-
-### Public datasets
-
-200 test decisions per dataset, sampled with a fixed seed; calibration fitted on a **disjoint**
-window of 200 decisions per dataset ([protocol](benchmarks/README.md#public-datasets)).
-
-| Dataset | Primitive | Accuracy, 1 view | Accuracy, debiased | Views disagree | ms / decision, 1 view | ms / decision, debiased |
+| Set | Primitive | n | Accuracy, 1 view | Accuracy, debiased | ms / decision, 1 view | ms / decision, debiased |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| BoolQ | noul | 0.855 | 0.865 | 3.0% | 404 | 499 |
-| AG News | choice (4) | 0.885 | 0.910 | 10.0% | 350 | 737 |
-| ARC-Challenge | choice (3–5) | 0.885 | 0.905 | 13.0% | 265 | 579 |
-| SST-5 | score (5 levels) | 0.420 | 0.385 | 15.0% | 278 | 476 |
+| Smoke set ([hand-written](benchmarks/README.md)) | mixed | 83 | 0.867 | 0.867 | 90 | 178 |
+| BoolQ | noul | 200 | 0.725 | 0.755 | 163 | 212 |
+| AG News | choice (4) | 200 | 0.875 | 0.875 | 134 | 309 |
+| SST-5 | score (5 levels) | 200 | 0.330 | 0.350 | 114 | 190 |
 
-Calibration (temperature + conformal sets at α = 0.1, fitted on the other window) applied to the
-debiased runs:
+What the baseline shows:
 
-| Dataset | NLL raw → calibrated | ECE raw → calibrated | Brier raw → calibrated | Set coverage (target 0.90) | Singleton sets |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| BoolQ | 2.733 → 0.335 | 0.132 → 0.066 | 0.255 → 0.201 | 0.920 | 84.5% |
-| AG News | 1.894 → 0.346 | 0.087 → 0.030 | 0.169 → 0.155 | 0.910 | 100% |
-| ARC-Challenge | 1.179 → 0.292 | 0.086 → 0.060 | 0.173 → 0.136 | 0.905 | 100% |
-| SST-5 | 10.16 → 1.315 | 0.573 → 0.104 | 1.141 → 0.692 | 0.815 | 8.5% |
+- **Fast enough for real-time use**: about 0.1–0.2 s per decision with one view on a laptop.
+- **Debiased views** add up to 3 points (BoolQ, SST-5) at roughly twice the cost.
+- **Raw probabilities are badly over-confident** (NLL 6.4 on BoolQ and 10.3 on SST-5 with one
+  view): the model says ~100% even when it is wrong. `diagnostics.agreement` still exposes many
+  of those cases (see the example above: 100% "billing", but one ordering out of four disagrees).
+- **Fine-grained scales are hard** for a small model (SST-5).
 
-Fitted temperatures: choice 7.2, noul 12.0, score 14.8.
-
-What the numbers say:
-
-- **Debiased views help choices and yes/no questions** (+1.0 to +2.5 points on BoolQ, AG News,
-  ARC, with lower NLL) **and hurt the 5-level ordinal scale** (−3.5 points on SST-5, where each
-  view alone scores 0.42 / 0.41 but the pooled answer 0.385). None of these differences is
-  significant on its own at n = 200 (paired McNemar p = 0.12–0.5); the direction is consistent.
-  They roughly double latency, so `settings.debias` is exposed per request.
-- **Raw probabilities are badly over-confident** (optimal temperatures of 7–15). Calibration cuts
-  NLL by 3–8× and ECE by half or more without changing a single answer.
-- **Conformal sets hit their target** on BoolQ, AG News and ARC (0.905–0.92 coverage for 0.90).
-  On SST-5 coverage fell short (0.815): its threshold was fitted on only 100 points of the
-  calibration window, which is noisy. Use a few hundred labelled decisions per question type.
-- **SST-5 is hard** for a 4B model at 5 fine-grained levels (0.42 exact, 0.86 within one level,
-  mean absolute error 0.73 levels).
-- Not run yet: Banking77 (77-way tournament), and the ~1B lightweight model.
+Calibration ([below](#calibrating-on-your-own-data)) fixes the meaning of the probabilities
+today; decision-tuning the model itself is the next step on the [roadmap](#roadmap).
 
 ## Calibrating on your own data
 
@@ -315,8 +279,8 @@ the model, backend and prompt version; a mismatch is reported at start-up.
 
 ## Limitations
 
-- No training is involved: quality is the base model's. A 4B model is fast and good at
-  common-sense judgments, weaker at arithmetic, dates and multi-hop reasoning.
+- Quality is bounded by the model. A 1.7B model is fast and fine for common-sense judgments,
+  weaker at fine-grained scales, arithmetic, dates and multi-hop reasoning.
 - Uncalibrated probabilities are over-confident; `confidence` is a property of the
   distribution's shape, not a probability of being right, until you calibrate.
 - Cyclic views remove *positional* bias, not bias towards particular option *content*.
@@ -325,6 +289,12 @@ the model, backend and prompt version; a mismatch is reported at start-up.
 
 ## Roadmap
 
+- **Decision-tuned small model.** Fine-tune a 1–2B model (LoRA) on the LocalDecision prompt,
+  with a loss on the answer letters only (cross-entropy + Brier) and options shuffled at every
+  step, so it is calibrated and position-invariant by design. The training set is ready:
+  `training/build_dataset.py` builds 116k decisions from permissively licensed sources, with
+  AG News, SST-5, Banking77 and the smoke set kept out for testing. Training fits a free cloud
+  GPU (Kaggle / Colab); the trainer is not written yet.
 - Cross-request prefix cache (radix tree) for repeated states, e.g. game loops and agents.
 - Multi-token option labels to lift the 26-letters-per-view limit without a tournament.
 - Contextual (content-free) prior correction as an optional second debiasing step.

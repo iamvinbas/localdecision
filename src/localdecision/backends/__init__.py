@@ -28,8 +28,8 @@ def default_backend() -> str:
 
 def default_model(backend: str) -> str:
     if backend == "mlx":
-        return "mlx-community/Qwen3-4B-Instruct-2507-8bit"
-    return "Qwen/Qwen3-4B-Instruct-2507"
+        return "mlx-community/Qwen3-1.7B-8bit"
+    return "Qwen/Qwen3-1.7B"
 
 
 def load_backend(name: str = "auto", model: str | None = None, **options: Any) -> Backend:

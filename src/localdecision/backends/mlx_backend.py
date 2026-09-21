@@ -25,7 +25,7 @@ import numpy as np
 
 from .base import Backend, PrefixSession, Readout, batches_by_length, pad_targets
 
-DEFAULT_MODEL = "mlx-community/Qwen3-4B-Instruct-2507-8bit"
+DEFAULT_MODEL = "mlx-community/Qwen3-1.7B-8bit"
 
 
 class MLXBackend(Backend):

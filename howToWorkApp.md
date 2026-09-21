@@ -50,14 +50,13 @@ internet except the one-time model download.
 
 | Your computer | Works? | Notes |
 | --- | --- | --- |
-| Mac with Apple Silicon (M1, M2, M3, M4…), 16 GB RAM or more | ✅ recommended | Uses Apple's MLX; this is the tested setup |
-| Mac with Apple Silicon, 8 GB RAM | ✅ with the small model | Use `mlx-community/Qwen3-0.6B-8bit` (see [section 13](#13-speed-vs-accuracy)) |
+| Mac with Apple Silicon (M1, M2, M3, M4…), 8 GB RAM or more | ✅ recommended | Uses Apple's MLX; this is the tested setup |
+| Very old or low-memory machines | ✅ with the tiny model | Use `mlx-community/Qwen3-0.6B-8bit` (see [section 13](#13-speed-vs-accuracy)) |
 | Linux or Windows with an NVIDIA GPU | ⚠️ experimental | PyTorch backend; tested on macOS CPU/MPS so far, not yet on CUDA |
 | Any computer, CPU only | ⚠️ slow | Works with the small model, a few seconds per question |
 | Intel Mac | ⚠️ CPU only | Same as above |
 
-Disk space: about **5 GB** for the default model (4.3 GB) plus the code and libraries,
-or about **1 GB** with the small model.
+Disk space: about **3 GB**: the default model (1.8 GB) plus the code and libraries.
 
 To check your Mac: Apple menu → *About This Mac*. "Chip: Apple M…" means Apple Silicon.
 
@@ -184,13 +183,13 @@ pytest -q          # runs the automatic tests, no model needed; ends with "passe
 localdecision selftest
 ```
 
-The **first time**, this downloads the model from Hugging Face (about 4.3 GB; it can take a
+The **first time**, this downloads the model from Hugging Face (about 1.8 GB; it can take a
 while). The files are stored in `~/.cache/huggingface` and reused afterwards. Then it checks that
 the fast computation path gives the same numbers as the slow reference path, and prints a JSON
 report. Look for:
 
 ```
-loaded Qwen3-4B-Instruct-2507-8bit on mlx in 4.7s · self-test passed (shared-prefix)
+loaded Qwen3-1.7B-8bit on mlx in 3.4s · self-test passed (shared-prefix)
 ```
 
 `self-test passed` means everything works. If it says `FAILED`, the app still works but falls
@@ -207,13 +206,7 @@ email and three questions (is it urgent? which team? how frustrated?).
 localdecision ask examples/ticket.json
 ```
 
-After a few seconds (the model loads every time you run `ask`) you get a JSON answer. To get
-probabilities that mean something (see [section 11](#11-make-the-probabilities-trustworthy-calibration)),
-add the calibration profile that comes with the repository:
-
-```bash
-localdecision ask examples/ticket.json --calibration results/public-Qwen3-4B-Instruct-2507-8bit/calibration.json
-```
+After a few seconds (the model loads every time you run `ask`) you get a JSON answer.
 
 Try also the routing demo: five support tickets, each routed to a team or to a human.
 
@@ -225,21 +218,21 @@ python examples/support_router.py
 
 ## 7. Read the answer
 
-Shortened answer for `examples/ticket.json`, with calibration:
+Shortened real answer for `examples/ticket.json` (default model, no calibration):
 
 ```json
 {
   "answers": {
-    "is_urgent":   {"type": "noul", "noul": 0.917},
+    "is_urgent":   {"type": "noul", "noul": 1.0},
     "department":  {"type": "choice", "choice": "billing",
-                    "probabilities": {"billing": 0.915, "technical": 0.045, "account": 0.020, "sales": 0.019},
-                    "confidence": 0.887},
-    "frustration": {"type": "score", "score": 1.31,
-                    "probabilities": {"0": 0.127, "1": 0.436, "2": 0.436}, "confidence": 0.155}
+                    "probabilities": {"billing": 0.99995, "technical": 0.00005, "account": 0.0, "sales": 0.0},
+                    "confidence": 0.99994},
+    "frustration": {"type": "score", "score": 1.0,
+                    "probabilities": {"0": 0.0, "1": 0.999999, "2": 0.000001}, "confidence": 0.999998}
   },
-  "usage": {"input_tokens": 563, "output_tokens": 0},
-  "diagnostics": {"department": {"views": 4, "agreement": 1.0, "prediction_set": ["billing"]}},
-  "timing": {"total_ms": 1395.6}
+  "usage": {"input_tokens": 595, "output_tokens": 0},
+  "diagnostics": {"department": {"views": 4, "agreement": 0.75}},
+  "timing": {"total_ms": 580.7}
 }
 ```
 
@@ -247,10 +240,10 @@ How to read it:
 
 | Field | Meaning |
 | --- | --- |
-| `noul` | Probability that the answer is *yes*. 0.917 → very likely urgent. |
+| `noul` | Probability that the answer is *yes*. 1.0 → the model is sure it is urgent. |
 | `choice` | The most likely option. |
 | `probabilities` | The chance of every option (they add up to 1). |
-| `score` | The average level. 1.31 = between "Frustrated but civil" (1) and "Very angry" (2). |
+| `score` | The average level; it can land between levels (e.g. 1.3 = between level 1 and level 2). Here 1.0 = "Frustrated but civil". |
 | `confidence` | 1 = all probability on one answer, 0 = completely unsure. |
 | `diagnostics.views` | How many times the question was asked with the options in a different order. |
 | `diagnostics.agreement` | Share of those orderings that gave the same answer. **Below 1.0 = the model is unsure.** |
@@ -258,9 +251,14 @@ How to read it:
 | `usage.output_tokens` | Always 0: the model never writes text, it only scores the options. |
 | `timing.total_ms` | Time spent on the request, in milliseconds. |
 
-In the example the frustration question has 0.436 / 0.436 on levels 1 and 2: the model cannot
-decide between "frustrated" and "very angry". That is useful information, not a bug: your code
-can treat it as "not sure".
+Two things to notice in the example:
+
+- The raw probabilities are all ~100%. Small models are **over-confident**: they say 100% even
+  when they are wrong, so do not read these numbers as real chances until you calibrate
+  ([section 11](#11-make-the-probabilities-trustworthy-calibration)).
+- Yet `agreement` for the team is **0.75**: one of the four orderings of the options picked a
+  different team. That is the model telling you it is less sure than 100% suggests. Your code can
+  treat `agreement < 1` as "not sure" (the routing demo does exactly this).
 
 ---
 
@@ -352,7 +350,7 @@ Useful options:
 
 ```bash
 localdecision serve --port 9000                                  # another port
-localdecision serve --calibration results/public-Qwen3-4B-Instruct-2507-8bit/calibration.json
+localdecision serve --calibration my-calibration-profile.json    # see section 11
 LOCALDECISION_API_KEY=my-secret localdecision serve              # require "Authorization: Bearer my-secret"
 ```
 
@@ -371,7 +369,7 @@ With the environment activated, start `python` (or use a script / Jupyter notebo
 ```python
 import localdecision as ld
 
-engine = ld.load(calibration="results/public-Qwen3-4B-Instruct-2507-8bit/calibration.json")
+engine = ld.load()          # add calibration="my-calibration-profile.json" once you have one
 
 result = engine.system_one(
     "The package arrived broken, I want my money back.",
@@ -386,7 +384,7 @@ result = engine.system_one(
     },
 )
 
-print(result.answers["action"].choice)        # 'refund'
+print(result.answers["action"].choice)        # the chosen option, e.g. 'refund'
 print(result.answers["action"].probabilities)
 print(result.answers["angry"].noul)
 print(result.diagnostics["action"].agreement)
@@ -403,13 +401,9 @@ requests. A full example that routes tickets with confidence thresholds is
 Out of the box the model is **over-confident**: it often says 100% even when it is wrong.
 Calibration fixes what the numbers *mean*; it never changes which answer is chosen.
 
-**Ready-made profile.** The repository includes
-`results/public-Qwen3-4B-Instruct-2507-8bit/calibration.json`, fitted on public datasets for the
-default model. Pass it with `--calibration ...` (CLI) or `calibration=...` (Python). It only fits
-that exact model; with another model you get a warning.
-
-**Your own profile (best).** Probabilities are most trustworthy when calibrated on decisions
-from *your* domain:
+There is no ready-made profile for the default model yet (a decision-tuned model with
+calibration built in is on the roadmap, see [training/](training/README.md)). Fit your own. It is also the best option in general, because probabilities are most trustworthy when
+calibrated on decisions from *your* domain:
 
 1. Collect a few hundred real examples with the correct answer (format in
    [section 12](#12-measure-the-quality-on-your-own-data)).
@@ -469,17 +463,17 @@ localdecision eval data/agnews.jsonl
 
 | Knob | Faster | More accurate |
 | --- | --- | --- |
-| Model | `--model mlx-community/Qwen3-0.6B-8bit` (~0.6 GB, several times faster) | default 4B model |
+| Model | `--model mlx-community/Qwen3-0.6B-8bit` (~0.6 GB, about 3× faster) | default 1.7B model |
 | Views | `"settings": {"debias": "none"}` in the request (one ordering) | `"auto"` (default: several orderings) |
 | Questions | fewer, shorter questions | more, well-described questions |
 | State | only the relevant part of your data | — |
 
-Measured on an M3 Pro with the 4B model: about 0.2–0.4 s per decision with one ordering, about
-0.4–0.7 s with the default debiased orderings. Asking several questions about the **same** state
+Measured on an M3 Pro with the default model: about 0.1–0.2 s per decision with one ordering,
+about 0.2–0.3 s with the default debiased orderings. Asking several questions about the **same** state
 in **one** request is much cheaper than separate requests, because the state is processed once.
 
-The small model is much less accurate: use it to try things or on low-memory machines, and
-measure it on your data before relying on it.
+The tiny model is less accurate: use it to try things or on very old machines, and measure it
+on your data before relying on it.
 
 ---
 
@@ -498,7 +492,7 @@ measure it on your data before relying on it.
 | `self-test FAILED` | The fast path gave different numbers for this model; the app switched to a slower safe mode automatically. Results are still correct. |
 | `warning: calibration profile was fitted with a different ...` | The profile belongs to another model or prompt version: fit a new one ([section 11](#11-make-the-probabilities-trustworthy-calibration)). |
 | Answers look wrong | Rewrite the question in English, describe each option, split complex questions, add a `not_stated` option, move numbers/dates into code. |
-| Free disk space used by models | Delete the model folder, e.g. `rm -rf ~/.cache/huggingface/hub/models--mlx-community--Qwen3-4B-Instruct-2507-8bit`. It is downloaded again when needed. |
+| Free disk space used by models | Delete the model folder, e.g. `rm -rf ~/.cache/huggingface/hub/models--mlx-community--Qwen3-1.7B-8bit`. It is downloaded again when needed. |
 
 ---
 

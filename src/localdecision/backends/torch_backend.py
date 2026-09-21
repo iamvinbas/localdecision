@@ -16,7 +16,7 @@ import numpy as np
 
 from .base import Backend, PrefixSession, Readout, batches_by_length, pad_targets
 
-DEFAULT_MODEL = "Qwen/Qwen3-4B-Instruct-2507"
+DEFAULT_MODEL = "Qwen/Qwen3-1.7B"
 
 
 class TorchBackend(Backend):

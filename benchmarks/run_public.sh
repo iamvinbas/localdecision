@@ -6,7 +6,7 @@
 # rows [0, N) are the test set, rows [N, 2N) are only used to fit the calibration profile.
 set -euo pipefail
 
-MODEL=${MODEL:-mlx-community/Qwen3-4B-Instruct-2507-8bit}
+MODEL=${MODEL:-mlx-community/Qwen3-1.7B-8bit}
 N=${N:-200}
 OUT=${OUT:-results/public-$(basename "$MODEL")}
 DATASETS=${DATASETS:-"boolq sst5 agnews arc banking77"}
