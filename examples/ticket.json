@@ -1,0 +1,30 @@
+{
+  "state": {
+    "channel": "email",
+    "customer": {"plan": "Business", "tenure_months": 26},
+    "message": "Help! My payouts have been failing for 3 days. Our suppliers are waiting and nobody replies."
+  },
+  "model": "localdecision-latest",
+  "questions": {
+    "is_urgent": {
+      "type": "noul",
+      "instructions": "Does the message convey urgency?",
+      "criteria": {"true": "Time-sensitive or blocking", "false": "Routine, no time pressure"}
+    },
+    "department": {
+      "type": "choice",
+      "instructions": "Which team should handle this?",
+      "criteria": {
+        "billing": "Payments, payouts, invoices, refunds",
+        "technical": "Bugs, errors, outages, integrations",
+        "account": "Login, profile, account access",
+        "sales": null
+      }
+    },
+    "frustration": {
+      "type": "score",
+      "instructions": "How frustrated is the customer?",
+      "criteria": ["Calm, just stating facts", "Frustrated but civil", "Very angry, threatening to leave"]
+    }
+  }
+}
