@@ -1,0 +1,26 @@
+{
+  "format": "localdecision.calibration/v1",
+  "temperatures": {
+    "choice": 6.8374
+  },
+  "qhat": {
+    "choice": 0.813368
+  },
+  "alpha": 0.1,
+  "fingerprint": {
+    "backend": "mlx",
+    "model_id": "mlx-community/Qwen3-1.7B-8bit",
+    "prompt_version": "ld-prompt-v1",
+    "letters": 26
+  },
+  "report": {
+    "choice": {
+      "samples": 200,
+      "split": true,
+      "nll_raw": 1.6467,
+      "nll_calibrated": 0.6142,
+      "ece_raw": 0.2005,
+      "ece_calibrated": 0.0762
+    }
+  }
+}

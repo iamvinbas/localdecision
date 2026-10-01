@@ -74,3 +74,19 @@ def test_metrics():
     ]
     s = summarize(records)
     assert s["accuracy"] == 1.0 and s["score_mae"] == pytest.approx(0.0)
+
+
+def test_conformal_summary_reports_singleton_accuracy():
+    def record(label, prediction_set):
+        return {
+            "kind": "choice",
+            "label": label,
+            "probs": [0.6, 0.3, 0.1],
+            "prediction_set": prediction_set,
+        }
+
+    s = summarize([record(0, [0]), record(1, [0]), record(1, [0, 1]), record(2, [0, 1])])
+    assert s["conformal_coverage"] == pytest.approx(0.5)
+    assert s["conformal_singleton_share"] == pytest.approx(0.5)
+    assert s["conformal_mean_set_size"] == pytest.approx(1.5)
+    assert s["conformal_singleton_accuracy"] == pytest.approx(0.5)

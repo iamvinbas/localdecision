@@ -7,7 +7,8 @@ Two independent tools, both fitted per question type (``noul``, ``choice``, ``sc
 * **Split-conformal prediction sets.** From held-out nonconformity scores s = 1 − p(true label)
   we take the ⌈(n+1)(1−α)⌉-th smallest as q̂. At inference the set {c : p(c) ≥ 1 − q̂}
   contains the true answer with probability ≥ 1 − α (marginally, under exchangeability).
-  A set of size one is a principled "safe to act automatically" signal.
+  A set of size one is the natural "act automatically" signal. The α budget is shared by all
+  decisions, so the error rate among singletons alone can be higher (up to α / their share).
 
 A profile is bound to a fingerprint (backend, model, prompt version): changing any of them
 invalidates the fit, and the engine warns about it.
@@ -79,7 +80,7 @@ def nll(logps: Sequence[np.ndarray], labels: Sequence[int], temperature: float =
 
 
 def fit_temperature(
-    logps: Sequence[np.ndarray], labels: Sequence[int], lo: float = 0.05, hi: float = 20.0
+    logps: Sequence[np.ndarray], labels: Sequence[int], lo: float = 0.05, hi: float = 100.0
 ) -> float:
     """NLL-optimal temperature. NLL is convex in β = 1/T, so golden-section search on log β
     over [1/hi, 1/lo] finds the global optimum."""

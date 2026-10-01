@@ -1,0 +1,153 @@
+{
+  "data": "data/banking77-test.jsonl",
+  "rows": 200,
+  "engine": {
+    "backend": "mlx",
+    "model_id": "mlx-community/Qwen3-1.7B-8bit",
+    "model": "Qwen3-1.7B-8bit",
+    "max_context": 32768,
+    "selftest": {
+      "passed": true,
+      "max_abs_diff": 0.015625,
+      "mode": "shared-prefix",
+      "detail": ""
+    },
+    "device": "Device(gpu, 0)",
+    "quantized": true,
+    "batch_size": 8,
+    "kv_budget_gb": 2.0,
+    "prompt_version": "ld-prompt-v1",
+    "answer_letters": 26,
+    "shared_prefix_tokenization": true,
+    "calibration": null
+  },
+  "fingerprint": {
+    "backend": "mlx",
+    "model_id": "mlx-community/Qwen3-1.7B-8bit",
+    "prompt_version": "ld-prompt-v1",
+    "letters": 26
+  },
+  "created": "2026-10-01T13:19:45",
+  "reports": {
+    "none": {
+      "overall": {
+        "decisions": 200,
+        "accuracy": 0.54,
+        "balanced_accuracy": 0.5347222222222222,
+        "nll": 10.61546065959458,
+        "brier": 0.8932320399118601,
+        "ece": 0.43957452999999996,
+        "mean_top_probability": 0.97957453,
+        "aurc": 0.38830602405049885,
+        "accuracy_at_50pct": 0.62,
+        "accuracy_at_80pct": 0.5875,
+        "unstable_share": 0.0,
+        "format_mass": 0.97686893,
+        "request_ms_p50": 640.665,
+        "request_ms_p95": 664.98,
+        "ms_per_decision": 644.4558000000001
+      },
+      "by_kind": {
+        "choice": {
+          "decisions": 200,
+          "accuracy": 0.54,
+          "balanced_accuracy": 0.5347222222222222,
+          "nll": 10.61546065959458,
+          "brier": 0.8932320399118601,
+          "ece": 0.43957452999999996,
+          "mean_top_probability": 0.97957453,
+          "aurc": 0.38830602405049885,
+          "accuracy_at_50pct": 0.62,
+          "accuracy_at_80pct": 0.5875,
+          "unstable_share": 0.0,
+          "format_mass": 0.97686893,
+          "request_ms_p50": 640.665,
+          "request_ms_p95": 664.98,
+          "ms_per_decision": 644.4558000000001
+        }
+      },
+      "by_tag": {
+        "banking77": {
+          "decisions": 200,
+          "accuracy": 0.54,
+          "balanced_accuracy": 0.5347222222222222,
+          "nll": 10.61546065959458,
+          "brier": 0.8932320399118601,
+          "ece": 0.43957452999999996,
+          "mean_top_probability": 0.97957453,
+          "aurc": 0.38830602405049885,
+          "accuracy_at_50pct": 0.62,
+          "accuracy_at_80pct": 0.5875,
+          "unstable_share": 0.0,
+          "format_mass": 0.97686893,
+          "request_ms_p50": 640.665,
+          "request_ms_p95": 664.98,
+          "ms_per_decision": 644.4558000000001
+        }
+      }
+    },
+    "auto": {
+      "overall": {
+        "decisions": 200,
+        "accuracy": 0.62,
+        "balanced_accuracy": 0.6224537037037037,
+        "nll": 7.312380104067337,
+        "brier": 0.70611659253748,
+        "ece": 0.33584001500000005,
+        "mean_top_probability": 0.955840015,
+        "aurc": 0.22167841904659788,
+        "accuracy_at_50pct": 0.8,
+        "accuracy_at_80pct": 0.66875,
+        "unstable_share": 0.465,
+        "accuracy_when_views_agree": 0.794392523364486,
+        "accuracy_when_views_disagree": 0.41935483870967744,
+        "format_mass": 0.965905345,
+        "request_ms_p50": 1199.495,
+        "request_ms_p95": 1411.612999999999,
+        "ms_per_decision": 1230.69945
+      },
+      "by_kind": {
+        "choice": {
+          "decisions": 200,
+          "accuracy": 0.62,
+          "balanced_accuracy": 0.6224537037037037,
+          "nll": 7.312380104067337,
+          "brier": 0.70611659253748,
+          "ece": 0.33584001500000005,
+          "mean_top_probability": 0.955840015,
+          "aurc": 0.22167841904659788,
+          "accuracy_at_50pct": 0.8,
+          "accuracy_at_80pct": 0.66875,
+          "unstable_share": 0.465,
+          "accuracy_when_views_agree": 0.794392523364486,
+          "accuracy_when_views_disagree": 0.41935483870967744,
+          "format_mass": 0.965905345,
+          "request_ms_p50": 1199.495,
+          "request_ms_p95": 1411.612999999999,
+          "ms_per_decision": 1230.69945
+        }
+      },
+      "by_tag": {
+        "banking77": {
+          "decisions": 200,
+          "accuracy": 0.62,
+          "balanced_accuracy": 0.6224537037037037,
+          "nll": 7.312380104067337,
+          "brier": 0.70611659253748,
+          "ece": 0.33584001500000005,
+          "mean_top_probability": 0.955840015,
+          "aurc": 0.22167841904659788,
+          "accuracy_at_50pct": 0.8,
+          "accuracy_at_80pct": 0.66875,
+          "unstable_share": 0.465,
+          "accuracy_when_views_agree": 0.794392523364486,
+          "accuracy_when_views_disagree": 0.41935483870967744,
+          "format_mass": 0.965905345,
+          "request_ms_p50": 1199.495,
+          "request_ms_p95": 1411.612999999999,
+          "ms_per_decision": 1230.69945
+        }
+      }
+    }
+  }
+}

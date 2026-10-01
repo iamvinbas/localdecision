@@ -62,16 +62,18 @@ result.diagnostics["team"].agreement   # 1.0   (all option orderings agree)
   a label-free instability signal.
 - **Up to 255 options.** Large choices run as a tournament whose rounds are merged with Luce's
   choice axiom, reproducing the single-shot distribution exactly for a consistent model.
-- **Calibration you can trust.** Per-primitive temperature scaling plus split-conformal
-  prediction sets with a finite-sample coverage guarantee: a singleton set is a principled
-  "act automatically" rule.
+- **Calibration, measured.** Per-primitive temperature scaling plus split-conformal
+  prediction sets with a finite-sample coverage guarantee. On five public benchmarks the
+  calibration error falls 2 to 9 times and the sets meet their 90% coverage target on average
+  ([results](#calibrated-probabilities)); a one-element set is a natural "act automatically" rule.
 - **Drop-in HTTP API.** `POST /v1/systemone` speaks the same wire format as TypeSafe's hosted
   System One API; the official `typesafe-sdk` works against a local server by changing only its
   base URL (verified with `typesafe-sdk` 0.7.0).
 - **Two backends, verified at load.** MLX for Apple Silicon, PyTorch for CUDA/MPS/CPU. A
   self-test checks the fast path against a plain forward pass and falls back automatically.
-- **Evaluation built in.** Accuracy, NLL, Brier, ECE, risk–coverage, conformal coverage, latency;
-  adapters for public datasets; a hand-written smoke set.
+- **Evaluation built in.** Accuracy, NLL, Brier, ECE, risk–coverage, conformal coverage and set
+  size, latency; adapters for public datasets; a hand-written smoke set; every published number
+  can be recomputed offline from the saved per-decision records.
 
 ## How it works
 
@@ -119,7 +121,8 @@ uv sync --extra torch --extra server
 The first run downloads the default model from Hugging Face: `mlx-community/Qwen3-1.7B-8bit`
 (~1.8 GB) on MLX, `Qwen/Qwen3-1.7B` (~4 GB) on PyTorch. It fits an ordinary laptop with 8 GB of
 RAM. Any instruction-tuned causal LM with a chat template works: pass `--model <repo or path>`;
-`mlx-community/Qwen3-0.6B-8bit` (~0.6 GB) is even lighter. A decision-tuned 1.7B model is the
+`mlx-community/Qwen3-0.6B-8bit` (~0.6 GB) is faster, `mlx-community/Qwen3-4B-8bit` (~4.3 GB) more
+accurate ([model size](#model-size) compares the three). A decision-tuned 1.7B model is the
 next step on the [roadmap](#roadmap); its training set builder is ready in [training/](training/README.md).
 
 ```bash
@@ -223,29 +226,98 @@ Common flags: `--backend auto|mlx|torch`, `--model`, `--batch-size`, `--max-cont
 
 ## Results
 
-Measured on a **MacBook Pro M3 Pro (18 GB)** with `mlx-community/Qwen3-1.7B-8bit` on MLX 0.32,
-prompt `ld-prompt-v1`, **zero-shot**: this is the starting point that the decision-tuned model
-([training/](training/README.md)) has to beat. Per-decision records are in [`results/`](results)
-and can be re-scored with `localdecision report`. Latency is wall-clock per decision, warm model.
+Measured on a **MacBook Pro M3 Pro (18 GB)** with MLX 0.32, prompt `ld-prompt-v1`, **zero-shot**:
+no training and no examples in the prompt. Each public dataset is shuffled with a fixed seed and
+cut into two disjoint windows of 200 rows: the **test** window produces every number below, the
+**calibration** window is used only to fit the calibration profiles
+([protocol](benchmarks/README.md)). The per-decision records, with the raw log-probabilities, are
+in [`results/`](results), so every table can be recomputed offline, without a model:
+`python benchmarks/make_tables.py results/public-Qwen3-1.7B-8bit`. Latency is wall-clock per
+decision, warm model.
 
-| Set | Primitive | n | Accuracy, 1 view | Accuracy, debiased | ms / decision, 1 view | ms / decision, debiased |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Smoke set ([hand-written](benchmarks/README.md)) | mixed | 83 | 0.867 | 0.867 | 90 | 178 |
-| BoolQ | noul | 200 | 0.725 | 0.755 | 163 | 212 |
-| AG News | choice (4) | 200 | 0.875 | 0.875 | 134 | 309 |
-| SST-5 | score (5 levels) | 200 | 0.330 | 0.350 | 114 | 190 |
+### Accuracy and speed
 
-What the baseline shows:
+Default model, `mlx-community/Qwen3-1.7B-8bit`:
 
-- **Fast enough for real-time use**: about 0.1–0.2 s per decision with one view on a laptop.
-- **Debiased views** add up to 3 points (BoolQ, SST-5) at roughly twice the cost.
-- **Raw probabilities are badly over-confident** (NLL 6.4 on BoolQ and 10.3 on SST-5 with one
-  view): the model says ~100% even when it is wrong. `diagnostics.agreement` still exposes many
-  of those cases (see the example above: 100% "billing", but one ordering out of four disagrees).
-- **Fine-grained scales are hard** for a small model (SST-5).
+| Set | Primitive | n | Accuracy, 1 view | Accuracy, debiased | Views disagree | Accuracy, views agree / disagree | ms / decision, 1 view | ms / decision, debiased |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Smoke set ([hand-written](benchmarks/README.md)) | mixed | 83 | 0.867 | 0.867 | 0.17 | 0.90 / 0.71 | 90 | 178 |
+| BoolQ | noul | 200 | 0.725 | 0.755 | 0.18 | 0.80 / 0.56 | 163 | 212 |
+| SST-5 | score (5) | 200 | 0.330 | 0.350 | 0.47 | 0.28 / 0.43 | 114 | 190 |
+| AG News | choice (4) | 200 | 0.875 | 0.875 | 0.12 | 0.91 / 0.62 | 134 | 309 |
+| ARC-Challenge | choice (3–5) | 200 | 0.765 | 0.780 | 0.38 | 0.87 / 0.63 | 111 | 293 |
+| Banking77 | choice (77) | 200 | 0.540 | 0.620 | 0.47 | 0.79 / 0.42 | 644 | 1231 |
 
-Calibration ([below](#calibrating-on-your-own-data)) fixes the meaning of the probabilities
-today; decision-tuning the model itself is the next step on the [roadmap](#roadmap).
+- **Fast enough for real-time use**: 0.1–0.3 s per decision on a laptop. Banking77, whose 77
+  options run as a tournament, takes 0.6 s with one view.
+- **Debiased views** add up to 8 points (Banking77) at roughly twice the cost.
+- **View disagreement is a free warning sign.** Without any label, the decisions on which the
+  views disagree are far less accurate: 0.42 against 0.79 on Banking77, 0.62 against 0.91 on
+  AG News. SST-5, where the model is weak either way, is the exception.
+- **Fine-grained scales are hard** for a small model (SST-5, five sentiment levels); the 4B
+  model does much better ([model size](#model-size)).
+
+### Calibrated probabilities
+
+Raw probabilities are badly over-confident: the model says ~100% even when it is wrong, and the
+fitted temperatures (the logits have to be divided by 5 to 15) measure by how much. Each
+dataset's profile is fitted on its own calibration window and applied to its test window, as you
+would calibrate on decisions from your own domain. Conformal sets use `alpha = 0.1`, a 90%
+coverage target.
+
+| Set | Temperature | NLL raw → calibrated | ECE raw → calibrated | Set coverage | Mean set size | Singleton sets (automated) | Accuracy when automated |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| BoolQ | 14.6 | 4.26 → 0.50 | 0.246 → 0.075 | 0.875 | 1.2 | 75% | 0.833 (125/150) |
+| SST-5 | 9.9 | 5.44 → 1.47 | 0.565 → 0.065 | 0.875 | 3.3 | 3% | 0.167 (1/6) |
+| AG News | 7.8 | 2.52 → 0.44 | 0.124 → 0.054 | 0.905 | 1.1 | 92% | 0.907 (166/183) |
+| ARC-Challenge | 6.8 | 2.54 → 0.65 | 0.186 → 0.083 | 0.900 | 1.5 | 68% | 0.874 (118/135) |
+| Banking77 | 5.1 | 7.31 → 1.89 | 0.336 → 0.048 | 0.925 | 22.8 | 2% | 1.000 (3/3) |
+
+- **Calibration error falls 2 to 9 times** (ECE), and the log-loss (NLL) 4 to 9 times.
+  Accuracy does not move: calibration never changes which answer is chosen.
+- **The sets keep their promise on average.** Over the 15 model × dataset pairs
+  measured (this table and [model size](#model-size)), the sets contain the right answer 0.899 of
+  the time against a 0.90 target. Single pairs range from 0.845 to 0.945, the scatter expected
+  when each threshold is fitted on 100 examples.
+- **How much can run unattended depends on the task, and the sets show it.** 92% of AG News
+  decisions get a one-element set, and 91% of those are right. On Banking77 almost none do, but
+  the set narrows 77 intents down to about 23 for a person, or a bigger model, to finish.
+- **The guarantee is an average over all decisions.** On BoolQ and ARC the automated decisions
+  are right 83–87% of the time, a little under 90%: the decisions with larger sets make up the
+  difference. If the automated ones must meet a bar, measure them on a test set and lower
+  `alpha`.
+
+### Model size
+
+Same protocol, three sizes of Qwen3 with 8-bit weights on MLX. Each cell is the accuracy with
+debiased views · milliseconds per decision.
+
+| Set | Qwen3-0.6B (0.6 GB) | Qwen3-1.7B (1.8 GB, default) | Qwen3-4B (4.3 GB) |
+| --- | ---: | ---: | ---: |
+| BoolQ | 0.730 · 80 ms | 0.755 · 212 ms | 0.835 · 481 ms |
+| SST-5 | 0.200 · 75 ms | 0.350 · 190 ms | 0.535 · 468 ms |
+| AG News | 0.760 · 114 ms | 0.875 · 309 ms | 0.870 · 771 ms |
+| ARC-Challenge | 0.595 · 90 ms | 0.780 · 293 ms | 0.885 · 604 ms |
+| Banking77 | 0.385 · 434 ms | 0.620 · 1231 ms | 0.610 · n/a¹ |
+| ECE after calibration, mean of the sets | 0.065 | 0.065 | 0.076 |
+| Automated (singleton sets), all sets pooled | 29% · 0.860 right | 48% · 0.866 right | 58% · 0.887 right |
+
+<sub>¹ This run was paused at regular intervals to keep the laptop's GPU below full load, so its
+latency is not comparable and is left out ([note](results/public-Qwen3-4B-8bit/banking77-test/NOTE.md));
+accuracy and calibration are unaffected.</sub>
+
+- **4B is the accurate choice**: 8 to 18.5 points more than 1.7B on BoolQ, ARC and SST-5, at 2
+  to 2.5 times the latency. It gains nothing on AG News, already easy, or on Banking77.
+- **0.6B is 2.5 to 3.3 times faster** than 1.7B but loses most where the task is hardest: 18.5
+  points on ARC, 23.5 on Banking77, and on SST-5 it is at chance (0.200 with five levels).
+- **Calibration works at every size** (mean ECE 0.065–0.076 after calibration), and a better
+  model is not only more accurate: it is sure more often, so more decisions can be automated
+  (58% against 48% and 29%) at a similar 86–89% accuracy.
+- **1.7B stays the default**: it fits an 8 GB laptop and answers in 0.1–0.3 s. Pass
+  `--model mlx-community/Qwen3-4B-8bit` when accuracy matters more than latency and memory.
+
+Decision-tuning a small model, so that it is calibrated and position-invariant without a
+profile, is the next step on the [roadmap](#roadmap).
 
 ## Calibrating on your own data
 
@@ -272,8 +344,8 @@ the model, backend and prompt version; a mismatch is reported at start-up.
 - **Keep code in control.** Ask narrow, atomic questions and combine them in code
   ([examples/support_router.py](examples/support_router.py)); change a weight in Python rather
   than a prompt.
-- **Numbers belong in code.** Small models compare numbers and dates unreliably (see the
-  `numeric` tag above). Compute them and ask the model the semantic part.
+- **Numbers belong in code.** Small models compare numbers and dates unreliably (3 of 5 right
+  on the smoke set's `numeric` tag). Compute them and ask the model the semantic part.
 - **One resident model.** Requests are serialized on one inference thread; parallelism lives
   inside a request, where it is free.
 
@@ -283,6 +355,10 @@ the model, backend and prompt version; a mismatch is reported at start-up.
   weaker at fine-grained scales, arithmetic, dates and multi-hop reasoning.
 - Uncalibrated probabilities are over-confident; `confidence` is a property of the
   distribution's shape, not a probability of being right, until you calibrate.
+- Conformal coverage holds on average over all decisions, not for each one, and not for the
+  automated (one-element) subset alone. Measure that subset on your own test set.
+- Calibration fixes what the numbers mean, not how often the model is right: where a model is
+  at chance (Qwen3-0.6B on SST-5), calibration makes its answers honestly uncertain, not better.
 - Cyclic views remove *positional* bias, not bias towards particular option *content*.
 - English prompts work best; other languages work but are less accurate.
 - Localhost by default; no rate limiting. Put it behind your own gateway before exposing it.

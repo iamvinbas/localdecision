@@ -92,15 +92,21 @@ def summarize(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
         )
     if "format_mass" in records[0]:
         out["format_mass"] = float(np.mean([r["format_mass"] for r in records]))
-    sets = [r["prediction_set"] for r in records if r.get("prediction_set") is not None]
-    if sets:
-        covered = [
-            r["label"] in r["prediction_set"]
-            for r in records
-            if r.get("prediction_set") is not None
-        ]
-        out["conformal_coverage"] = float(np.mean(covered))
-        out["conformal_singleton_share"] = float(np.mean([len(s) == 1 for s in sets]))
+    with_sets = [r for r in records if r.get("prediction_set") is not None]
+    if with_sets:
+        out["conformal_coverage"] = float(
+            np.mean([r["label"] in r["prediction_set"] for r in with_sets])
+        )
+        out["conformal_mean_set_size"] = float(
+            np.mean([len(r["prediction_set"]) for r in with_sets])
+        )
+        singletons = [r for r in with_sets if len(r["prediction_set"]) == 1]
+        out["conformal_singleton_share"] = len(singletons) / len(with_sets)
+        if singletons:
+            # The "act automatically" rule: how often a one-element set is right.
+            out["conformal_singleton_accuracy"] = float(
+                np.mean([r["prediction_set"][0] == r["label"] for r in singletons])
+            )
     scores = [r for r in records if r["kind"] == "score"]
     if scores:
         exp_level = [float(np.dot(np.arange(len(r["probs"])), r["probs"])) for r in scores]

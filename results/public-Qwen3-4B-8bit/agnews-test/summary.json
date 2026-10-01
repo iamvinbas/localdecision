@@ -1,0 +1,153 @@
+{
+  "data": "data/agnews-test.jsonl",
+  "rows": 200,
+  "engine": {
+    "backend": "mlx",
+    "model_id": "mlx-community/Qwen3-4B-8bit",
+    "model": "Qwen3-4B-8bit",
+    "max_context": 32768,
+    "selftest": {
+      "passed": true,
+      "max_abs_diff": 0.015625,
+      "mode": "shared-prefix",
+      "detail": ""
+    },
+    "device": "Device(gpu, 0)",
+    "quantized": true,
+    "batch_size": 8,
+    "kv_budget_gb": 2.0,
+    "prompt_version": "ld-prompt-v1",
+    "answer_letters": 26,
+    "shared_prefix_tokenization": true,
+    "calibration": null
+  },
+  "fingerprint": {
+    "backend": "mlx",
+    "model_id": "mlx-community/Qwen3-4B-8bit",
+    "prompt_version": "ld-prompt-v1",
+    "letters": 26
+  },
+  "created": "2026-10-01T13:52:05",
+  "reports": {
+    "none": {
+      "overall": {
+        "decisions": 200,
+        "accuracy": 0.86,
+        "balanced_accuracy": 0.856413701570552,
+        "nll": 3.258118361976671,
+        "brier": 0.27819180294719,
+        "ece": 0.14083056499999994,
+        "mean_top_probability": 0.997844985,
+        "aurc": 0.07398814987473287,
+        "accuracy_at_50pct": 0.89,
+        "accuracy_at_80pct": 0.89375,
+        "unstable_share": 0.0,
+        "format_mass": 0.9781015200000001,
+        "request_ms_p50": 314.525,
+        "request_ms_p95": 374.35,
+        "ms_per_decision": 329.97035000000005
+      },
+      "by_kind": {
+        "choice": {
+          "decisions": 200,
+          "accuracy": 0.86,
+          "balanced_accuracy": 0.856413701570552,
+          "nll": 3.258118361976671,
+          "brier": 0.27819180294719,
+          "ece": 0.14083056499999994,
+          "mean_top_probability": 0.997844985,
+          "aurc": 0.07398814987473287,
+          "accuracy_at_50pct": 0.89,
+          "accuracy_at_80pct": 0.89375,
+          "unstable_share": 0.0,
+          "format_mass": 0.9781015200000001,
+          "request_ms_p50": 314.525,
+          "request_ms_p95": 374.35,
+          "ms_per_decision": 329.97035000000005
+        }
+      },
+      "by_tag": {
+        "agnews": {
+          "decisions": 200,
+          "accuracy": 0.86,
+          "balanced_accuracy": 0.856413701570552,
+          "nll": 3.258118361976671,
+          "brier": 0.27819180294719,
+          "ece": 0.14083056499999994,
+          "mean_top_probability": 0.997844985,
+          "aurc": 0.07398814987473287,
+          "accuracy_at_50pct": 0.89,
+          "accuracy_at_80pct": 0.89375,
+          "unstable_share": 0.0,
+          "format_mass": 0.9781015200000001,
+          "request_ms_p50": 314.525,
+          "request_ms_p95": 374.35,
+          "ms_per_decision": 329.97035000000005
+        }
+      }
+    },
+    "auto": {
+      "overall": {
+        "decisions": 200,
+        "accuracy": 0.87,
+        "balanced_accuracy": 0.8658476638347028,
+        "nll": 2.6808673098039715,
+        "brier": 0.25547630067787,
+        "ece": 0.12795030500000013,
+        "mean_top_probability": 0.9979503049999999,
+        "aurc": 0.05276524388022794,
+        "accuracy_at_50pct": 0.92,
+        "accuracy_at_80pct": 0.925,
+        "unstable_share": 0.08,
+        "accuracy_when_views_agree": 0.9021739130434783,
+        "accuracy_when_views_disagree": 0.5,
+        "format_mass": 0.985289525,
+        "request_ms_p50": 745.5150000000001,
+        "request_ms_p95": 863.0824999999999,
+        "ms_per_decision": 771.007
+      },
+      "by_kind": {
+        "choice": {
+          "decisions": 200,
+          "accuracy": 0.87,
+          "balanced_accuracy": 0.8658476638347028,
+          "nll": 2.6808673098039715,
+          "brier": 0.25547630067787,
+          "ece": 0.12795030500000013,
+          "mean_top_probability": 0.9979503049999999,
+          "aurc": 0.05276524388022794,
+          "accuracy_at_50pct": 0.92,
+          "accuracy_at_80pct": 0.925,
+          "unstable_share": 0.08,
+          "accuracy_when_views_agree": 0.9021739130434783,
+          "accuracy_when_views_disagree": 0.5,
+          "format_mass": 0.985289525,
+          "request_ms_p50": 745.5150000000001,
+          "request_ms_p95": 863.0824999999999,
+          "ms_per_decision": 771.007
+        }
+      },
+      "by_tag": {
+        "agnews": {
+          "decisions": 200,
+          "accuracy": 0.87,
+          "balanced_accuracy": 0.8658476638347028,
+          "nll": 2.6808673098039715,
+          "brier": 0.25547630067787,
+          "ece": 0.12795030500000013,
+          "mean_top_probability": 0.9979503049999999,
+          "aurc": 0.05276524388022794,
+          "accuracy_at_50pct": 0.92,
+          "accuracy_at_80pct": 0.925,
+          "unstable_share": 0.08,
+          "accuracy_when_views_agree": 0.9021739130434783,
+          "accuracy_when_views_disagree": 0.5,
+          "format_mass": 0.985289525,
+          "request_ms_p50": 745.5150000000001,
+          "request_ms_p95": 863.0824999999999,
+          "ms_per_decision": 771.007
+        }
+      }
+    }
+  }
+}

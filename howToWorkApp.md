@@ -247,7 +247,7 @@ How to read it:
 | `confidence` | 1 = all probability on one answer, 0 = completely unsure. |
 | `diagnostics.views` | How many times the question was asked with the options in a different order. |
 | `diagnostics.agreement` | Share of those orderings that gave the same answer. **Below 1.0 = the model is unsure.** |
-| `diagnostics.prediction_set` | Answers that are still plausible (only with calibration). **One element = safe to act automatically.** |
+| `diagnostics.prediction_set` | Answers that are still plausible (only with calibration). **One element = a candidate for acting automatically** ([section 11](#11-make-the-probabilities-trustworthy-calibration)). |
 | `usage.output_tokens` | Always 0: the model never writes text, it only scores the options. |
 | `timing.total_ms` | Time spent on the request, in milliseconds. |
 
@@ -419,6 +419,13 @@ calibrated on decisions from *your* domain:
 
 A simple rule for automation: **act automatically when `prediction_set` has one element; ask a
 person otherwise.**
+
+How much does it help? On the public benchmarks in the README, a profile fitted on 200 labelled
+examples cuts the calibration error (ECE) by 2 to 9 times, and the sets contain the right answer
+about 90% of the time, as asked with `--alpha 0.1`
+([Results](README.md#calibrated-probabilities)). One caveat: that 90% is an average over *all*
+decisions. The automated ones (a set with one element) can be right less often than that, so
+measure them on your own test set, and pick a smaller `alpha` if they fall short of what you need.
 
 ---
 

@@ -44,6 +44,10 @@ localdecision eval benchmarks/smoke-v1.jsonl --debias none,auto --by-tag --outpu
 Protocol (`run_public.sh`): each dataset is shuffled with seed 0. Rows `[0, N)` are the **test**
 window; rows `[N, 2N)` are a disjoint **calibration** window used only to fit the temperature and
 conformal thresholds. Every test number is computed once on the test window; nothing is tuned on it.
+Each dataset gets its own profile (`<dataset>-calib/calibration.json`), the way a user calibrates
+on decisions from their own domain. Finished evaluations are skipped, so an interrupted run can be
+started again, and the script ends by printing the README tables (`make_tables.py`). Passing
+several result folders to `make_tables.py` prints the model-size comparison instead.
 
 ```bash
 bash benchmarks/run_public.sh                                   # N=200, default model

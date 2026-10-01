@@ -161,6 +161,7 @@ _COLUMNS = [
 _CONFORMAL = [
     ("conformal_coverage", "coverage", "{:.3f}"),
     ("conformal_singleton_share", "singleton", "{:.3f}"),
+    ("conformal_singleton_accuracy", "sgl.acc", "{:.3f}"),
 ]
 
 

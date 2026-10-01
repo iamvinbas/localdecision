@@ -160,9 +160,14 @@ C(x) = { c : p(c) ≥ 1 − q̂ }
 ```
 
 contains the true answer with probability ≥ 1 − α (marginally, for exchangeable data). A
-**singleton set** is a principled "act automatically" rule with a known error budget α; larger
-sets say exactly which options remain plausible. `localdecision calibrate` fits both on a
-different window of data from the one you evaluate on.
+**singleton set** is the natural "act automatically" rule; larger sets say exactly which options
+remain plausible. The budget α is shared by *all* decisions, though, not granted to each one: if
+a fraction *s* of the sets are singletons, their error rate can reach α / *s*. For yes/no
+questions it is exactly that, since a two-element set always contains the answer (measured on
+BoolQ: α = 0.1, *s* = 0.75, singletons right 83% of the time). To bound the error of the
+automated decisions themselves, measure it on held-out data and lower α until it fits.
+`localdecision calibrate` fits temperature and q̂ on a different window of data from the one you
+evaluate on.
 
 ## 8. What this is not
 
