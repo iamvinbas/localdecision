@@ -241,7 +241,7 @@ Default model, `mlx-community/Qwen3-1.7B-8bit`:
 
 | Set | Primitive | n | Accuracy, 1 view | Accuracy, debiased | Views disagree | Accuracy, views agree / disagree | ms / decision, 1 view | ms / decision, debiased |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Smoke set ([hand-written](benchmarks/README.md)) | mixed | 83 | 0.867 | 0.867 | 0.17 | 0.90 / 0.71 | 90 | 178 |
+| Smoke set ([hand-written](benchmarks/README.md)) | mixed | 83 | 0.843 | 0.855 | 0.20 | 0.91 / 0.65 | 90 | 176 |
 | BoolQ | noul | 200 | 0.725 | 0.755 | 0.18 | 0.80 / 0.56 | 163 | 212 |
 | SST-5 | score (5) | 200 | 0.330 | 0.350 | 0.47 | 0.28 / 0.43 | 114 | 190 |
 | AG News | choice (4) | 200 | 0.875 | 0.875 | 0.12 | 0.91 / 0.62 | 134 | 309 |
@@ -402,7 +402,7 @@ tests/               unit tests (no weights needed) + optional real-model tests
 ```bash
 uv sync --extra mlx --extra server --extra dev
 uv run pytest -q                        # unit tests, no model weights needed
-LOCALDECISION_TEST_MODEL=mlx-community/Qwen3-0.6B-8bit uv run pytest tests/test_model.py
+LOCALDECISION_TEST_MODEL=mlx-community/Qwen3-1.7B-8bit uv run pytest tests/test_model.py
 uv run ruff check src tests && uv run ruff format --check src tests
 ```
 

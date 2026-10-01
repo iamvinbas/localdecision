@@ -15,7 +15,7 @@ They cover the situations a decision layer meets in practice:
 | `missing-evidence` | the right answer is an explicit "not stated" option |
 | `negation` | "I do **not** want a refund" |
 | `italian` | non-English input with English questions |
-| `cv` | ordinal fit of a candidate to a job (score) |
+| `relevance` | ordinal fit of a product to a customer's request (score) |
 | `moderation` | allow / review / remove, threat detection |
 | `smart-home` | intent classification |
 | `rules` | applying a policy passed as structured instructions |

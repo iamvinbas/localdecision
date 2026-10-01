@@ -307,8 +307,8 @@ Rules:
 
 Tips for good answers:
 
-1. **One thing per question.** Instead of "Is this a good candidate?", ask separately about
-   experience, skills and location, and combine the answers in your code.
+1. **One thing per question.** Instead of "Is this a good apartment?", ask separately about
+   price, size and location, and combine the answers in your code.
 2. **Describe the options.** `"billing": "Payments, invoices, refunds"` beats a bare `"billing"`.
 3. **Give an escape option** like `"not_stated"` when the state might not contain the answer.
 4. **Write questions in English.** States can be in other languages (Italian works), but

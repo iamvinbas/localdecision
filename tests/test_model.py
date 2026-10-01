@@ -1,6 +1,6 @@
 """Integration tests on real weights. Skipped unless LOCALDECISION_TEST_MODEL is set, e.g.
 
-LOCALDECISION_TEST_MODEL=mlx-community/Qwen3-0.6B-8bit pytest tests/test_model.py
+LOCALDECISION_TEST_MODEL=mlx-community/Qwen3-1.7B-8bit pytest tests/test_model.py
 """
 
 import os
